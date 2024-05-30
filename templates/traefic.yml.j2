@@ -1,0 +1,83 @@
+#{{ ansible_managed }}
+
+{% if traefik_dashboard == True %}
+api:
+    dashboard: true
+{% endif %}
+
+
+{% if traefik_entrypoints | length > 0 %}
+entryPoints:
+    {{ traefik_entrypoints | to_yaml | indent }}
+{% endif %}
+
+http:
+    {% if traefik_routers | length > 0 -%}
+    routers:
+        {{ traefik_routers | to_yaml  | indent(10) }}
+    {% else %}
+    routers: {}
+    {% endif -%}
+
+    {% if traefik_middlewares | length > 0 -%}
+    middlewares:
+        {{ traefik_middlewares | to_yaml  | indent(10) }}
+    {% else %}
+    middlewares: {}
+    {% endif %}
+
+
+{% if traefik_tls %}
+certificatesResolvers:
+    letsEncrypt:
+        acme:
+            email: {{ traefik_tls_acme_mail }}
+            storage: /etc/traefik/acme.json
+    {% if traefik_tls_challenge['type'] == 'httpChallenge' %}
+        httpChallenge:
+                entryPoint: {{ traefik_tls_challenge['entryPoint'] }}
+    {% elif traefik_tls_challenge['type'] == 'tlsChallenge' %}
+        tlsChallenge: {}
+    {% endif -%}
+{% endif %}
+
+providers:
+{% if traefik_file_provider | length > 0 %}
+    file:
+    {% if 'filename' in traefik_file_provider %}
+    filename: /etc/traefik/{{ traefik_file_provider['filename'] | basename }}
+    {% else %}
+    directory: {{ traefik_file_provider['directory'] }}
+    {% endif %}
+    watch: {{ traefik_file_provider['watch'] | default(True) }}
+{% endif %}
+{% if traefik_docker_provider | length > 0 %}
+    docker:
+    {% if 'endpoint' in traefik_docker_provider %}
+    endpoint: {{ traefik_docker_provider['endpoint'] }}
+    {% endif -%}
+    {% if 'useBindPortIP' in traefik_docker_provider %}
+    useBindPortIP: {{ traefik_docker_provider['useBindPortIP'] }}
+    {% endif -%}
+    {% if 'exposedByDefault' in traefik_docker_provider %}
+    exposedByDefault: {{ traefik_docker_provider['exposedByDefault'] }}
+    {% endif -%}
+    {% if 'network' in traefik_docker_provider %}
+    network: {{ traefik_docker_provider['network'] }}
+    {% endif -%}
+    {% if 'defaultRule' in traefik_docker_provider %}
+    defaultRule: {{ traefik_docker_provider['defaultRule'] }}
+    {% endif -%}
+    {% if 'httpClientTimeout' in traefik_docker_provider %}
+    httpClientTimeout: {{ traefik_docker_provider['httpClientTimeout'] }}
+    {% endif -%}
+    {% if 'watch' in traefik_docker_provider %}
+    watch: {{ traefik_docker_provider['watch'] }}
+    {% endif -%}
+    {% if 'constraints' in traefik_docker_provider %}
+    constraints: {{ traefik_docker_provider['constraints'] }}
+    {% endif -%}
+    {% if 'allowEmptyServices' in traefik_docker_provider %}
+    allowEmptyServices: {{ traefik_docker_provider['allowEmptyServices'] }}
+    {% endif %}
+{% endif %}

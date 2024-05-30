@@ -1,0 +1,72 @@
+---
+- name: Ensure traefik directory
+  file:
+    path: "{{ traefik_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy main traefik configuration
+  template:
+    src: traefic.yml.j2
+    dest: "{{ traefik_dir }}/traefic.yml"
+    mode: '0755'
+
+- name: Ensure traefik directory
+  file:
+    path: "{{ traefik_file_provider['filename'] | dirname }}"
+    state: directory
+    mode: '0755'
+  when: '"filename" in traefik_file_provider'
+
+- name: Copy file provider configuration
+  template:
+    src: file-provider.yml.j2
+    dest: "{{ traefik_file_provider['filename'] }}"
+    mode: '0755'
+  when: '"filename" in traefik_file_provider'
+
+- name: Build traefik container compose configuration
+  set_fact:
+    docker_traefik_configuration: |
+          image: {{ traefik_image }}
+          container_name: {{ traefik_container_name }}
+          restart: unless-stopped
+
+          {% if traefik_host_network_mode_host -%}
+          network_mode: host
+          {% endif %}
+
+          {% if traefic_commands | length > 0 %}
+          command:
+            {{ traefic_commands | to_yaml  | indent(6) }}
+          {% endif %}
+
+          {% if traefik_container_labels | length > 0 %}
+          labels:
+            {{ traefik_container_labels | to_yaml  | indent(6) }}
+          {% endif %}
+
+          {% if traefik_container_networks | length > 0 %}
+          networks:
+            {{ traefik_container_networks.keys() | list | to_yaml  | indent(6) }}
+          {% endif %}
+
+          volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - {{ traefik_dir }}:/etc/traefik
+
+    docker_traefik_networks: |
+          {% if traefik_container_networks | length > 0 %}
+          {{ traefik_container_networks | to_yaml }}
+          {% endif %}
+
+- name: Setup traefik
+  docker_compose:
+    state: present
+    project_name: traefik
+    definition:
+      version: '3.5'
+      services:
+        traefik: "{{ docker_traefik_configuration | from_yaml }}"
+      networks: "{{ docker_traefik_networks | from_yaml }}"

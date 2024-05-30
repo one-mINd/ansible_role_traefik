@@ -1,0 +1,108 @@
+---
+### Traefik docker container configs
+traefik_image: traefik:v2.2
+traefik_container_name: traefik
+
+# That option allow you to setup traefik with "network_mode: host"
+traefik_host_network_mode_host: False
+
+# Docker compose like yml dict of networks
+# Traefik container will attach to all of them
+# Example:
+# traefik_container_networks:
+#   default:
+#     external: True
+#   frontend:
+#     driver: custom-driver-1
+#   backend:
+#     driver: custom-driver-2
+#     driver_opts:
+#       foo: "1"
+#       bar: "2"
+traefik_container_networks: {}
+
+# Docker compose like yml list of container labels
+# Thats labels only for traefik container
+# Example:
+# traefik_container_labels:
+#   - "traefik.enable=true"
+#   - "traefik.http.routers.traefik.entrypoints=https"
+#   - "traefik.http.routers.traefik.rule=Host(`traefik.example.com`)"
+#   - "traefik.http.routers.traefik.tls=true"
+#   - "traefik.http.routers.traefik.tls.certresolver=letsEncrypt"
+traefik_container_labels: []
+
+# Docker compose like yml list of command options for traefik
+# Example:
+# traefic_commands:
+# - "--api.insecure=true"
+# - "--providers.docker"
+# - "--providers.docker.exposedByDefault=false"
+# - "--providers.docker.network=proxynet"
+# - "--entrypoints.http.address=:80"
+# - "--entrypoints.http.http.redirections.entrypoint.to=https"
+# - "--entrypoints.http.http.redirections.entrypoint.scheme=https"
+# - "--entrypoints.https.address=:443"
+# - "--log.level=DEBUG"
+traefic_commands: []
+
+### Traefik configuration file options
+# Path to traefik directory on host
+traefik_dir: /var/lib/traefik
+
+# Enable traefik dashboard?
+traefik_dashboard: False
+
+# Dict with entryPoints configuration
+# https://doc.traefik.io/traefik/routing/entrypoints/
+traefik_entrypoints:
+  http:
+    address: ":80"
+  https:
+    address: ":443"
+
+# Dict with routers
+# https://doc.traefik.io/traefik/routing/routers/
+traefik_routers:   
+  http-catchall:
+    rule: hostregexp(`{host:.+}`)
+    entrypoints:
+      - http
+    middlewares:
+      - redirect-to-https
+
+# Dict with middlewares
+# https://doc.traefik.io/traefik/middlewares/overview/
+traefik_middlewares:   
+  redirect-to-https:
+    redirectScheme:
+      scheme: https
+      permanent: false
+
+# Should TLS be configured?
+traefik_tls: True
+traefik_tls_acme_mail: nobody@mail.ru
+traefik_tls_acme_storage: "{{ traefik_dir }}/acme.json"
+traefik_tls_challenge:
+  # TLS challenges can be httpChallenge or tlsChallenge.
+  # dnsChallenge currently unsupported
+  type: tlsChallenge
+  # entryPoint MUST be provided with httpChallenge
+  # entryPoint: None
+
+### Docker provider confs
+# Provider configuration in main traefik.yml configuration file
+# https://doc.traefik.io/traefik/providers/docker/
+traefik_docker_provider: {}
+
+### File provider confs
+# Provider configuration in main traefik.yml configuration file
+# Currently supported only `filename` and `watch` options for provider
+# https://doc.traefik.io/traefik/providers/file/
+traefik_file_provider: {}
+# Routers for file proider
+traefik_fp_routers: {}
+# Middlewares for file proider
+traefik_fp_middlewares: {}
+# Services for file proider
+traefik_fp_services: {}

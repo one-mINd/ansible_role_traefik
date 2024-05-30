@@ -1,0 +1,23 @@
+#{{ ansible_managed }}
+
+http:
+    {% if traefik_fp_routers | length > 0 -%}
+    routers:
+        {{ traefik_fp_routers | to_yaml  | indent(10) }}
+    {% else %}
+    routers: {}
+    {% endif -%}
+
+    {% if traefik_fp_middlewares | length > 0 -%}
+    middlewares:
+        {{ traefik_fp_middlewares | to_yaml  | indent(10) }}
+    {% else %}
+    middlewares: {}
+    {% endif -%}
+
+    {% if traefik_fp_services | length > 0 -%}
+    services:
+        {{ traefik_fp_services | to_yaml  | indent(10) }}
+    {% else %}
+    services: {}
+    {% endif -%}
