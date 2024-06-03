@@ -58,6 +58,17 @@
             {{ traefik_container_networks.keys() | list | to_yaml  | indent(6) }}
           {% endif %}
 
+          {% set ports = [] -%}
+          {% for key, value in traefik_entrypoints.items()  -%}
+          {{ ports.append( value['address'].split(':')[1] ) }}
+          {% endfor -%}
+          {% if ( ports | length > 0 ) and ( not traefik_host_network_mode_host ) -%}
+          ports:
+          {% for port in ports -%}
+          - {{ port }}:{{ port }}
+          {% endfor -%}
+          {% endif -%}
+
           volumes:
             - /etc/localtime:/etc/localtime:ro
             - /var/run/docker.sock:/var/run/docker.sock:ro
