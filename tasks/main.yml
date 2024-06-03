@@ -59,6 +59,8 @@
     docker_traefik_networks: |
           {% if traefik_container_networks | length > 0 %}
           {{ traefik_container_networks | to_yaml }}
+          {% else %}
+          {}
           {% endif %}
 
 - name: Setup traefik
