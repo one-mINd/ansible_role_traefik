@@ -7,8 +7,8 @@
 
 - name: Copy main traefik configuration
   template:
-    src: traefic.yml.j2
-    dest: "{{ traefik_dir }}/traefic.yml"
+    src: traefik.yml.j2
+    dest: "{{ traefik_dir }}/traefik.yml"
     mode: '0755'
 
 - name: Ensure traefik directory
@@ -17,6 +17,13 @@
     state: directory
     mode: '0755'
   when: '"filename" in traefik_file_provider'
+
+- name: Ensure traefik log file
+  file:
+    path: "{{ traefik_logs['filePath'] }}"
+    mode: '0755'
+    state: touch
+  when: '"filePath" in traefik_logs'
 
 - name: Copy file provider configuration
   template:
@@ -55,6 +62,9 @@
             - /etc/localtime:/etc/localtime:ro
             - /var/run/docker.sock:/var/run/docker.sock:ro
             - {{ traefik_dir }}:/etc/traefik
+            {% if 'filePath' in traefik_logs -%}
+            - {{ traefik_logs['filePath'] }}:{{ traefik_logs['filePath'] }}
+            {% endif -%}
 
     docker_traefik_networks: |
           {% if traefik_container_networks | length > 0 %}

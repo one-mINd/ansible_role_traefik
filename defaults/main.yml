@@ -79,6 +79,13 @@ traefik_middlewares:
       scheme: https
       permanent: false
 
+# Dict with log configuration
+# https://doc.traefik.io/traefik/observability/logs/
+traefik_logs:   
+  filePath: "/var/log/traefik.log"
+  format: json
+  level: DEBUG
+
 # Should TLS be configured?
 traefik_tls: True
 traefik_tls_acme_mail: nobody@mail.ru

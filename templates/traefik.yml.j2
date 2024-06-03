@@ -11,6 +11,13 @@ entryPoints:
     {{ traefik_entrypoints | to_yaml | indent }}
 {% endif %}
 
+
+{% if traefik_logs | length > 0 %}
+log:
+    {{ traefik_logs | to_yaml | indent }}
+{% endif %}
+
+
 http:
     {% if traefik_routers | length > 0 -%}
     routers:
